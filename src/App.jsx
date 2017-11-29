@@ -4,6 +4,7 @@ import Navbar from './Navbar.jsx';
 import ChatBar from './ChatBar.jsx';
 import MessageList from './MessageList.jsx';
 
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -21,16 +22,25 @@ class App extends Component {
       ]
     };
 
-   this.onNewMessage=this.onNewMessage.bind(this);
+  this.socket = null;
+  this.onNewMessage=this.onNewMessage.bind(this);
+  }
+
+  componentDidMount() {
+    this.socket = new WebSocket("ws://localhost:3001")
+    this.socket.addEventListener('message', (message) => {
+      this.setState({messages: this.state.messages.concat(JSON.parse(message.data))});
+      //console.log(this.state.messages);
+    });
   }
 
   onNewMessage(content) {
-    this.setState({
-      messages: this.state.messages.concat({
+    const newMessages = {
         username: 'Anonymous',
         content: content
-      })
-    })
+    };
+  
+    this.socket.send(JSON.stringify(newMessages));
   }
 
   render() {
