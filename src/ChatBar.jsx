@@ -11,7 +11,7 @@ class ChatBar extends Component {
     this.onEnterKey = this.onEnterKey.bind(this);
   }
 
-  // allows user to input a message in the provided input box
+  //allows user to input a message in the provided input box
   handleChange(event) {
     this.setState({
       value: event.target.value
@@ -21,7 +21,8 @@ class ChatBar extends Component {
   // once user hits 'enter' key, text will be console logged
   onEnterKey(event) {
     if(event.keyCode == 13) {
-      console.log(event.target.value)
+      this.props.onNewMessage(this.state.value);
+      this.state.value = ''
     }
   }
 
