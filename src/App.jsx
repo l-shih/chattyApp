@@ -28,10 +28,6 @@ class App extends Component {
       this.setState({ connected: false });
     });
 
-    this.socket.addEventListener('error', ()=>{
-      this.setState({ connected: false });
-    });
-
     this.socket.addEventListener('message', (message) => {
       // console.log('message');
       const data = JSON.parse(message.data);
@@ -48,15 +44,6 @@ class App extends Component {
         default:
           console.info(`Unknown message type: ${data.type}`, data);
       }
-      //console.log(data);
-      // if (data.type === 'incomingMessage' || data.type === 'incomingNotification') {
-      //   this.setState({messages: this.state.messages.concat(data) });
-      //   //console.log('i just came from server, i am messages obj', this.state.messages, this.state.color, this.state.type);
-      // } else {
-      //   this.setState({ userCount: data.content, color: data.color });
-      //   //console.log('i just came from server, i am userchage obj', this.state.userCount, this.state.color);
-      // };
-      //console.log('i am data in did mount, ', this.state.messages);
     });
   }
 
