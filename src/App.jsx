@@ -11,40 +11,71 @@ class App extends Component {
     this.state = {
       currentUser: { name: 'Anonymous' },
       messages: [],
-      type: '',
       userCount: 1,
-      clientId: ''
     };
 
-  this.socket = null;
-  this.onNewMessage=this.onNewMessage.bind(this);
-  this.onNewUsername=this.onNewUsername.bind(this);
+    this.socket = null;
   }
 
-  componentDidMount() {
-    this.socket = new WebSocket("ws://localhost:3001")
+  componentWillMount() {
+    this.socket = new WebSocket(`ws://${location.hostname}:3001`);
+
+    this.socket.addEventListener('open', ()=>{
+      this.setState({ connected: true });
+    });
+
+    this.socket.addEventListener('close', ()=>{
+      this.setState({ connected: false });
+    });
+
+    this.socket.addEventListener('error', ()=>{
+      this.setState({ connected: false });
+    });
+
     this.socket.addEventListener('message', (message) => {
+      // console.log('message');
       const data = JSON.parse(message.data);
-      console.log(data);
-      if (data.type === 'incomingMessage' || data.type === 'incomingNotification') {
-        this.setState({messages: this.state.messages.concat({ username: data.username, content: data.content, type: data.type })});
-      } else {
-      this.setState({ userCount: data.content, clientId: data.clientId });
-      };
-      console.log('i am data in did mount, ', data);
+      // console.log('Received message', data);
+
+      switch(data.type) {
+        case 'incomingMessage':
+        case 'incomingNotification':
+          this.setState({messages: this.state.messages.concat(data) });
+        break;
+        case 'userCount':
+          this.setState({ userCount: data.content });
+          break;
+        default:
+          console.info(`Unknown message type: ${data.type}`, data);
+      }
+      //console.log(data);
+      // if (data.type === 'incomingMessage' || data.type === 'incomingNotification') {
+      //   this.setState({messages: this.state.messages.concat(data) });
+      //   //console.log('i just came from server, i am messages obj', this.state.messages, this.state.color, this.state.type);
+      // } else {
+      //   this.setState({ userCount: data.content, color: data.color });
+      //   //console.log('i just came from server, i am userchage obj', this.state.userCount, this.state.color);
+      // };
+      //console.log('i am data in did mount, ', this.state.messages);
     });
   }
 
-  onNewMessage(user, content) {
+  componentWillUnmount() {
+    this.socket.close();
+    delete this.socket;
+  }
+
+  onNewMessage = (user, content) => {
     const newMessage = {
       type: 'postMessage',
       username: user,
       content: content,
     };
+    console.log('Sending a message', newMessage);
     this.socket.send(JSON.stringify(newMessage));
   }
 
-  onNewUsername(user) {
+  onNewUsername = (user) => {
     let currentUser = this.state.currentUser;
     const oldUser = this.state.currentUser.name;
     const newUser = user;
@@ -66,7 +97,7 @@ class App extends Component {
     return (
       <div>
         <Navbar count={ this.state.userCount }/>
-        <MessageList messages={ this.state.messages }/>
+        <MessageList messages={ this.state.messages } color={ this.state.color }/>
         <ChatBar currentUsername={ this.state.currentUser } 
          onNewMessage={ this.onNewMessage } onNewUsername={ this.onNewUsername } />
       </div>
