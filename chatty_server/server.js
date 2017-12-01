@@ -1,21 +1,17 @@
-const express = require('express');
 const { OPEN, Server } = require('ws');
+const express = require('express');
 const uuidv4 = require('uuid/v4');
 
-// Set the port to 3001
 const PORT = 3001;
 
-// Create a new express server
 const server = express()
-   // Make the express server serve static assets (html, javascript, css) from the /public folder
   .use(express.static('public'))
   .listen(PORT, '0.0.0.0', 'localhost', () => console.log(`Listening on ${ PORT }`));
 
-// Create the WebSockets server
 const wss = new Server({ server });
 
 function getRandomColor() {
-  const colors = ['red','green','yellow','blue','purple','cyan'];
+  const colors = ['red','green','blue','purple'];
   const randomNum = Math.floor(Math.random() * colors.length) + 1;
   return colors[randomNum];
 }
@@ -44,7 +40,6 @@ wss.on('connection', (socket) => {
   
   updateOnlineCount();
 
-  // Receives message object as a string, which needs to be changed to object
   socket.on('message', (data) => {
     let message = JSON.parse(data);
     
@@ -52,18 +47,19 @@ wss.on('connection', (socket) => {
       case 'postNotification':
         message.type = 'incomingNotification'
         break;
+      case 'postTextMessage':
+        message.type = 'incomingTextMessage';
+        break;
       default:
-        message.type = 'incomingMessage';
+        message.type = 'incomingImageMessage';
     }
 
     message.color = color;
     message.id = uuidv4();
-    // console.dir(message, { colors: true });
-    // Will show new message to all open clients
+
     broadcast(message);
   });
 
-  // Set up a callback for when a client closes the socket. This usually means they closed their browser.
   socket.on('close', () => {
     console.log('Client disconnected')
     updateOnlineCount();

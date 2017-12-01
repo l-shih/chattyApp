@@ -19,25 +19,21 @@ class App extends Component {
 
   componentWillMount() {
     this.socket = new WebSocket(`ws://${location.hostname}:3001`);
-
     this.socket.addEventListener('open', ()=>{
       this.setState({ connected: true });
     });
-
     this.socket.addEventListener('close', ()=>{
       this.setState({ connected: false });
     });
 
     this.socket.addEventListener('message', (message) => {
-      // console.log('message');
       const data = JSON.parse(message.data);
-      // console.log('Received message', data);
-
       switch(data.type) {
-        case 'incomingMessage':
+        case 'incomingImageMessage':
+        case 'incomingTextMessage':
         case 'incomingNotification':
           this.setState({messages: this.state.messages.concat(data) });
-        break;
+          break;
         case 'userCount':
           this.setState({ userCount: data.content });
           break;
@@ -52,13 +48,25 @@ class App extends Component {
     delete this.socket;
   }
 
+  // THIS WORKS --- UNCOMMENT ME IF YOU FUCK UP
+  // onNewMessage = (user, content) => {
+  //   const newMessage = {
+  //     type: 'postMessage',
+  //     username: user,
+  //     content: content,
+  //   };
+  //   this.socket.send(JSON.stringify(newMessage));
+  // }
+
+  // Trying to catch when a message has an image in it
   onNewMessage = (user, content) => {
+    const imgTest = (/\.(gif|jpg|jpeg|tiff|png)$/i);
     const newMessage = {
-      type: 'postMessage',
+      type: (imgTest.test(content) ? 'postImageMessage' : 'postTextMessage'),
       username: user,
       content: content,
     };
-    console.log('Sending a message', newMessage);
+    // console.log(newMessage);
     this.socket.send(JSON.stringify(newMessage));
   }
 
@@ -72,9 +80,7 @@ class App extends Component {
         type: 'postNotification',
         content: `${ oldUser } changed to ${ newUser }`
       };
-
       this.socket.send(JSON.stringify(newUsername));
-
       currentUser.name = user
       this.setState({ currentUser });
     }

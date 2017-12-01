@@ -42,6 +42,7 @@ class ChatBar extends Component {
       this.props.onNewMessage(user, this.state.message, this.state.type);
       this.state.message = ''
     }
+
   }
 
 
