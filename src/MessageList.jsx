@@ -6,14 +6,15 @@ class MessageList extends Component {
   render() {
     const messages = this.props.messages.map((message, index) => {
       return <Message
-      key={index}
-      name={message.username}
-      content={message.content} />
+      key={ index }
+      name={ message.username }
+      content={ message.content }
+      type={ message.type } />
     });
 
     return (
       <main className='messages'>
-        {messages}
+        { messages }
       </main>
     )
   }

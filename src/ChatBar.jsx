@@ -1,41 +1,64 @@
 import React, {Component} from 'react';
 
 class ChatBar extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
-      value: ''
+      prevUser: this.props.currentUsername.name,
+      currentUser: this.props.currentUsername.name,
+      message: '',
+      type: ''
     };
 
-    this.handleChange = this.handleChange.bind(this);
-    this.onEnterKey = this.onEnterKey.bind(this);
+    this.handleUserChange = this.handleUserChange.bind(this);
+    this.handleMessageChange = this.handleMessageChange.bind(this);
+    this.onMessageEnterKey = this.onMessageEnterKey.bind(this);
+    this.onUserEnterKey = this.onUserEnterKey.bind(this);
   }
 
   //allows user to input a message in the provided input box
-  handleChange(event) {
+  handleUserChange(event) {
     this.setState({
-      value: event.target.value
+      currentUser: event.target.value,
+    });
+  }
+
+  onUserEnterKey(event) {
+    if(event.keyCode == 13) {
+      this.props.onNewUsername(this.state.currentUser);
+    }
+  }
+
+  handleMessageChange(event) {
+    this.setState({
+      message: event.target.value,
     });
   }
 
   // once user hits 'enter' key, text will be console logged
-  onEnterKey(event) {
+  onMessageEnterKey(event) {
     if(event.keyCode == 13) {
-      this.props.onNewMessage(this.state.value);
-      this.state.value = ''
+      let user = this.state.currentUser || 'Anonymous';
+      this.props.onNewMessage(user, this.state.message, this.state.type);
+      this.state.message = ''
     }
   }
+
 
   render() {
     return (
       <footer className="chatbar">
-        <input className="chatbar-username" placeholder={`${this.props.currentUsername.name}`}/>
+        <input className="chatbar-username" 
+        placeholder="Username"
+        value={ this.state.currentUser } 
+        onChange={ this.handleUserChange }
+        onKeyDown={ this.onUserEnterKey }/>
         <input 
         className="chatbar-message" 
         placeholder="Type a message and hit ENTER" 
-        value={this.state.value} 
-        onChange={this.handleChange}
-        onKeyDown={this.onEnterKey}/>
+        value={ this.state.message } 
+        onChange={ this.handleMessageChange }
+        onKeyDown={ this.onMessageEnterKey }/>
       </footer>
     );
   }

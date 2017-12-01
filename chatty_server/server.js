@@ -15,14 +15,54 @@ const server = express()
 // Create the WebSockets server
 const wss = new SocketServer({ server });
 
-// Set up a callback that will run when a client connects to the server
-wss.on('connection', (socket) => {
-  //clients.push(socket);
+// function broadcast(data) {
+//   wss.clients.forEach((client) => {
+//     if (client.readyState == SocketServer.OPEN) {
+//       client.send(JSON.stringify(data));
+//     }
+//   });
+// };
 
+wss.on('connection', (socket) => {
+  clients.push(socket);
+  const randomNum = Math.floor(Math.random() * 4) + 1;
+
+  if (randomNum === 1) {
+    color = 'red';
+  } else if (randomNum === 2) {
+    color = 'green';
+  } else if (randomNum === 3) {
+    color = 'yellow';
+  } else if (randomNum === 4) {
+    color = 'blue';
+  }
+  
+  //console.log(randomNum);
+
+  const userCount = {
+    type: 'userCount',
+    content: wss.clients.size
+  };
+
+  clients.forEach((client) => {
+    if (client.readyState == socket.OPEN) {
+      client.send(JSON.stringify(userCount));
+    }
+  })
+
+  // Receives message object as a string, which needs to be changed to object
   socket.on('message', (message) => {
     let msgObj = JSON.parse(message);
-    msgObj["id"] = uuidv4();
-    wss.clients.forEach((client) => {
+    if  (msgObj.type == 'postNotification') {
+      msgObj["type"] = 'incomingNotification'
+      msgObj["clientColor"] = color;
+    } else {
+      msgObj["type"] = 'incomingMessage'
+      msgObj["id"] = uuidv4();
+    }
+    console.log(msgObj);
+    // Will show new message to all open clients
+    clients.forEach((client) => {
       if (client.readyState === socket.OPEN) {
         client.send(JSON.stringify(msgObj));
       }
@@ -30,5 +70,18 @@ wss.on('connection', (socket) => {
   });
 
   // Set up a callback for when a client closes the socket. This usually means they closed their browser.
-  socket.on('close', () => console.log('Client disconnected'));
+  socket.on('close', () => {
+    console.log('Client disconnected')
+    const userCount = {
+      type: 'userCount',
+      content: wss.clients.size
+    };
+    clients.forEach((client) => {
+      if (client.readyState == socket.OPEN) {
+        client.send(JSON.stringify(userCount));
+      }
+    })
+
+  });
+
 });
